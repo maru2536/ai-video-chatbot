@@ -1,0 +1,202 @@
+/* シンプルで美しいAIチャットボット - 淡い青とピンクのグラデーション */
+
+/* 背景グラデーション */
+.gradient-background {
+  background: linear-gradient(135deg, 
+    #e3f2fd 0%,    /* 淡い青 */
+    #f8bbd9 25%,   /* 淡いピンク */
+    #e1f5fe 50%,   /* 淡い水色 */
+    #fce4ec 75%,   /* 薄いピンク */
+    #e0f2f1 100%   /* 薄いミント */
+  );
+  background-size: 400% 400%;
+  animation: gradientShift 12s ease-in-out infinite;
+}
+
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* ガラス効果（シンプル版） */
+.glass-simple {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+/* アバターのシンプルなフロート */
+.avatar-float {
+  animation: simpleFloat 4s ease-in-out infinite;
+}
+
+@keyframes simpleFloat {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+/* シンプルなボタン */
+.btn-simple {
+  background: linear-gradient(45deg, #81c7d4, #f8a5c2);
+  border: none;
+  color: white;
+  transition: all 0.3s ease;
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+.btn-simple:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(129, 199, 212, 0.3);
+}
+
+.btn-simple:active {
+  transform: translateY(0px);
+}
+
+/* メッセージアニメーション（シンプル） */
+.message-fade {
+  animation: fadeInUp 0.4s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 入力フィールド */
+.input-simple {
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(8px);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-radius: 16px;
+  transition: all 0.3s ease;
+}
+
+.input-simple:focus {
+  background: rgba(255, 255, 255, 0.4);
+  border-color: #81c7d4;
+  box-shadow: 0 4px 12px rgba(129, 199, 212, 0.2);
+  outline: none;
+}
+
+/* シンプルなタイピングインジケーター */
+.typing-simple {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.typing-dot-simple {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: linear-gradient(45deg, #81c7d4, #f8a5c2);
+  animation: typingBounceSimple 1.4s ease-in-out infinite;
+}
+
+.typing-dot-simple:nth-child(1) { animation-delay: 0.2s; }
+.typing-dot-simple:nth-child(2) { animation-delay: 0.4s; }
+.typing-dot-simple:nth-child(3) { animation-delay: 0.6s; }
+
+@keyframes typingBounceSimple {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-8px); }
+}
+
+/* 音声ビジュアライザー（シンプル） */
+.visualizer-simple {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  height: 30px;
+}
+
+.visualizer-bar-simple {
+  width: 3px;
+  height: 4px;
+  background: linear-gradient(to top, #81c7d4, #f8a5c2);
+  border-radius: 2px;
+  animation: pulseSimple 1.2s ease-in-out infinite;
+}
+
+.visualizer-bar-simple:nth-child(1) { animation-delay: 0.1s; }
+.visualizer-bar-simple:nth-child(2) { animation-delay: 0.2s; }
+.visualizer-bar-simple:nth-child(3) { animation-delay: 0.3s; }
+.visualizer-bar-simple:nth-child(4) { animation-delay: 0.4s; }
+.visualizer-bar-simple:nth-child(5) { animation-delay: 0.5s; }
+
+@keyframes pulseSimple {
+  0%, 100% { height: 4px; opacity: 0.5; }
+  50% { height: 20px; opacity: 1; }
+}
+
+/* シンプルなスクロールバー */
+.scrollbar-simple::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-simple::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+}
+
+.scrollbar-simple::-webkit-scrollbar-thumb {
+  background: linear-gradient(45deg, #81c7d4, #f8a5c2);
+  border-radius: 10px;
+}
+
+.scrollbar-simple::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(45deg, #f8a5c2, #81c7d4);
+}
+
+/* コピーボタン */
+.copy-btn {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 24px;
+  height: 24px;
+  background: linear-gradient(45deg, #81c7d4, #f8a5c2);
+  border: none;
+  border-radius: 50%;
+  color: white;
+  font-size: 10px;
+  opacity: 0;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.message-container:hover .copy-btn {
+  opacity: 1;
+}
+
+.copy-btn:hover {
+  transform: scale(1.1);
+}
+
+/* レスポンシブ調整 */
+@media (max-width: 768px) {
+  .gradient-background {
+    animation-duration: 8s;
+  }
+  
+  .avatar-float {
+    animation-duration: 3s;
+  }
+  
+  .glass-simple {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+}
