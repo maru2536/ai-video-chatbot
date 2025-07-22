@@ -2,7 +2,31 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import Image from 'next/image'
 import './simple-ui.css'
-import { PersonProfile, PersonProfileStorage } from './types/chat'
+
+// Persona型定義（APIからの型定義をインポート）
+interface Persona {
+  id: string
+  name: string
+  category: string
+  description: string
+  personality: string
+  speakingStyle: string
+  background: string
+  expertise: string[]
+  catchPhrase: string
+  responseStyle: {
+    tone: string
+    vocabulary: string
+    approach: string
+  }
+  sampleResponses: Array<{
+    question: string
+    response: string
+  }>
+  createdAt: string
+  updatedAt: string
+  active: boolean
+}
 
 // 型定義
 interface Message {
@@ -49,7 +73,7 @@ const PersonaAdminModal = ({
 }: { 
   isOpen: boolean
   onClose: () => void
-  personas: any[]
+  personas: Persona[]
 }) => {
   if (!isOpen) return null
 
@@ -115,163 +139,6 @@ const PersonaAdminModal = ({
   )
 }
 
-// 人物プロファイル作成モーダルコンポーネント（非推奨）
-const ProfileCreationModal = ({ 
-  isOpen, 
-  onClose, 
-  onCreate 
-}: { 
-  isOpen: boolean
-  onClose: () => void
-  onCreate: (profile: Omit<PersonProfile, 'id' | 'createdAt' | 'updatedAt'>) => void
-}) => {
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    personality: '',
-    speakingStyle: '',
-    background: '',
-    expertise: '',
-    catchPhrase: ''
-  })
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!formData.name.trim()) return
-
-    onCreate({
-      ...formData,
-      expertise: formData.expertise.split(',').map(s => s.trim()).filter(Boolean)
-    })
-    
-    // フォームリセット
-    setFormData({
-      name: '',
-      description: '',
-      personality: '',
-      speakingStyle: '',
-      background: '',
-      expertise: '',
-      catchPhrase: ''
-    })
-    onClose()
-  }
-
-  if (!isOpen) return null
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="glass-simple max-w-2xl w-full max-h-[80vh] overflow-y-auto">
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-800">新しい人物プロファイル作成</h2>
-            <button
-              onClick={onClose}
-              className="text-gray-500 hover:text-gray-700 text-2xl font-bold"
-              aria-label="閉じる"
-            >
-              ×
-            </button>
-          </div>
-          
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">名前 *</label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                className="input-simple w-full p-3"
-                required
-                placeholder="例: 夏目漱石"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">説明</label>
-              <input
-                type="text"
-                value={formData.description}
-                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                className="input-simple w-full p-3"
-                placeholder="例: 明治時代の小説家、評論家"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">性格</label>
-              <textarea
-                value={formData.personality}
-                onChange={(e) => setFormData(prev => ({ ...prev, personality: e.target.value }))}
-                className="input-simple w-full p-3 h-20 resize-none"
-                placeholder="例: 知的で皮肉屋、時に神経質だが情に厚い面もある"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">話し方</label>
-              <textarea
-                value={formData.speakingStyle}
-                onChange={(e) => setFormData(prev => ({ ...prev, speakingStyle: e.target.value }))}
-                className="input-simple w-full p-3 h-20 resize-none"
-                placeholder="例: 丁寧語を使うが時々関西弁が混じる、比喩を多用する"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">背景・経歴</label>
-              <textarea
-                value={formData.background}
-                onChange={(e) => setFormData(prev => ({ ...prev, background: e.target.value }))}
-                className="input-simple w-full p-3 h-20 resize-none"
-                placeholder="例: 東京帝国大学英文科卒業、教師を経て作家に"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">専門分野（カンマ区切り）</label>
-              <input
-                type="text"
-                value={formData.expertise}
-                onChange={(e) => setFormData(prev => ({ ...prev, expertise: e.target.value }))}
-                className="input-simple w-full p-3"
-                placeholder="例: 文学, 英語教育, 心理描写, 社会批評"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">口癖・決まり文句（任意）</label>
-              <input
-                type="text"
-                value={formData.catchPhrase}
-                onChange={(e) => setFormData(prev => ({ ...prev, catchPhrase: e.target.value }))}
-                className="input-simple w-full p-3"
-                placeholder="例: 智に働けば角が立つ"
-              />
-            </div>
-            
-            <div className="flex gap-4 pt-4">
-              <button
-                type="submit"
-                className="btn-simple px-6 py-3 font-medium flex-1"
-              >
-                作成する
-              </button>
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-6 py-3 font-medium border border-gray-300 rounded-xl bg-white text-gray-700 hover:bg-gray-50 flex-1"
-              >
-                キャンセル
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 export default function Home() {
   // 基本的なステート
   const [message, setMessage] = useState('')
@@ -291,8 +158,8 @@ export default function Home() {
   const [isComposing, setIsComposing] = useState(false)
   
   // 人物プロファイル関連のステート
-  const [predefinedPersonas, setPredefinedPersonas] = useState<any[]>([])
-  const [activePersona, setActivePersona] = useState<any | null>(null)
+  const [predefinedPersonas, setPredefinedPersonas] = useState<Persona[]>([])
+  const [activePersona, setActivePersona] = useState<Persona | null>(null)
   const [loadingPersonas, setLoadingPersonas] = useState(true)
   const [showAdminModal, setShowAdminModal] = useState(false)
   
@@ -304,7 +171,6 @@ export default function Home() {
 
   // LocalStorage関連の定数
   const STORAGE_KEY = 'ai-chat-history'
-  const PROFILE_STORAGE_KEY = 'ai-chat-profiles'
   const MAX_MESSAGES = 50
 
   // 会話履歴の保存
@@ -343,41 +209,6 @@ export default function Home() {
     localStorage.removeItem(STORAGE_KEY)
   }, [])
 
-  // 人物プロファイルの保存
-  const saveProfiles = useCallback((profiles: PersonProfile[], activeProfileId: string | null) => {
-    try {
-      const profileStorage: PersonProfileStorage = {
-        profiles,
-        activeProfileId,
-        lastUpdated: new Date()
-      }
-      localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profileStorage))
-    } catch (error) {
-      console.warn('Failed to save profiles:', error)
-    }
-  }, [])
-
-  // 人物プロファイルの読み込み
-  const loadProfiles = useCallback((): PersonProfileStorage | null => {
-    try {
-      const stored = localStorage.getItem(PROFILE_STORAGE_KEY)
-      if (stored) {
-        const profileStorage: PersonProfileStorage = JSON.parse(stored)
-        return {
-          ...profileStorage,
-          profiles: profileStorage.profiles.map(profile => ({
-            ...profile,
-            createdAt: new Date(profile.createdAt),
-            updatedAt: new Date(profile.updatedAt)
-          })),
-          lastUpdated: new Date(profileStorage.lastUpdated)
-        }
-      }
-    } catch (error) {
-      console.warn('Failed to load profiles:', error)
-    }
-    return null
-  }, [])
 
   // メッセージの自動スクロール
   const scrollToBottom = useCallback(() => {
@@ -609,7 +440,7 @@ export default function Home() {
         // LocalStorageから選択中のペルソナIDを復元
         const savedPersonaId = localStorage.getItem('selected-persona-id')
         if (savedPersonaId) {
-          const savedPersona = data.personas.find((p: any) => p.id === savedPersonaId)
+          const savedPersona = data.personas.find((p: Persona) => p.id === savedPersonaId)
           if (savedPersona) {
             setActivePersona(savedPersona)
           }
@@ -623,7 +454,7 @@ export default function Home() {
   }, [])
 
   // ペルソナ選択機能
-  const selectPersona = useCallback((persona: any | null) => {
+  const selectPersona = useCallback((persona: Persona | null) => {
     setActivePersona(persona)
     if (persona) {
       localStorage.setItem('selected-persona-id', persona.id)
