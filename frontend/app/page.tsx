@@ -41,7 +41,81 @@ const SimpleAudioVisualizer = ({ isActive }: { isActive: boolean }) => {
   )
 }
 
-// 人物プロファイル作成モーダルコンポーネント
+// ペルソナ管理モーダルコンポーネント
+const PersonaAdminModal = ({ 
+  isOpen, 
+  onClose, 
+  personas
+}: { 
+  isOpen: boolean
+  onClose: () => void
+  personas: any[]
+}) => {
+  if (!isOpen) return null
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="glass-simple max-w-4xl w-full max-h-[80vh] overflow-y-auto">
+        <div className="p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-800">ペルソナ管理</h2>
+            <button
+              onClick={onClose}
+              className="text-gray-500 hover:text-gray-700 text-2xl font-bold"
+              aria-label="閉じる"
+            >
+              ×
+            </button>
+          </div>
+          
+          <div className="space-y-4">
+            <p className="text-gray-600">
+              事前定義されたペルソナの一覧です。データを編集するには 
+              <code className="bg-gray-100 px-2 py-1 rounded text-sm">frontend/data/personas/personas.json</code> 
+              ファイルを直接編集してください。
+            </p>
+            
+            <div className="grid gap-4">
+              {personas.map(persona => (
+                <div key={persona.id} className="border border-gray-200 rounded-lg p-4">
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <h3 className="font-bold text-lg">{persona.name}</h3>
+                      <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                        {persona.category}
+                      </span>
+                    </div>
+                    <div className={`px-2 py-1 rounded text-xs font-medium ${
+                      persona.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                    }`}>
+                      {persona.active ? '有効' : '無効'}
+                    </div>
+                  </div>
+                  
+                  <p className="text-gray-600 text-sm mb-2">{persona.description}</p>
+                  
+                  <details className="text-sm">
+                    <summary className="cursor-pointer text-blue-600 hover:text-blue-800">
+                      詳細情報を表示
+                    </summary>
+                    <div className="mt-2 space-y-1 text-gray-600">
+                      <p><strong>性格:</strong> {persona.personality}</p>
+                      <p><strong>話し方:</strong> {persona.speakingStyle}</p>
+                      <p><strong>専門分野:</strong> {persona.expertise.join(', ')}</p>
+                      <p><strong>特徴的な言葉:</strong> {persona.catchPhrase}</p>
+                    </div>
+                  </details>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// 人物プロファイル作成モーダルコンポーネント（非推奨）
 const ProfileCreationModal = ({ 
   isOpen, 
   onClose, 
@@ -217,9 +291,10 @@ export default function Home() {
   const [isComposing, setIsComposing] = useState(false)
   
   // 人物プロファイル関連のステート
-  const [profiles, setProfiles] = useState<PersonProfile[]>([])
-  const [activeProfile, setActiveProfile] = useState<PersonProfile | null>(null)
-  const [showProfileModal, setShowProfileModal] = useState(false)
+  const [predefinedPersonas, setPredefinedPersonas] = useState<any[]>([])
+  const [activePersona, setActivePersona] = useState<any | null>(null)
+  const [loadingPersonas, setLoadingPersonas] = useState(true)
+  const [showAdminModal, setShowAdminModal] = useState(false)
   
   // Refs
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -400,7 +475,7 @@ export default function Home() {
         },
         body: JSON.stringify({ 
           message: textToSend,
-          profile: activeProfile 
+          personaId: activePersona?.id
         }),
       })
 
@@ -467,7 +542,7 @@ export default function Home() {
     } finally {
       setLoading(false)
     }
-  }, [message, messages, saveConversation, speechSynthesisSupported, speakText, activeProfile])
+  }, [message, messages, saveConversation, speechSynthesisSupported, speakText, activePersona])
 
   // リトライ機能
   const retryLastMessage = useCallback(() => {
@@ -522,37 +597,40 @@ export default function Home() {
   // 文字数計算
   const characterCount = useMemo(() => message.length, [message])
 
-  // 人物プロファイル管理機能
-  const createProfile = useCallback((profileData: Omit<PersonProfile, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const newProfile: PersonProfile = {
-      ...profileData,
-      id: `profile-${Date.now()}`,
-      createdAt: new Date(),
-      updatedAt: new Date()
+  // 事前定義されたペルソナの読み込み
+  const loadPredefinedPersonas = useCallback(async () => {
+    try {
+      setLoadingPersonas(true)
+      const response = await fetch('/api/personas?active=true')
+      if (response.ok) {
+        const data = await response.json()
+        setPredefinedPersonas(data.personas || [])
+        
+        // LocalStorageから選択中のペルソナIDを復元
+        const savedPersonaId = localStorage.getItem('selected-persona-id')
+        if (savedPersonaId) {
+          const savedPersona = data.personas.find((p: any) => p.id === savedPersonaId)
+          if (savedPersona) {
+            setActivePersona(savedPersona)
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load predefined personas:', error)
+    } finally {
+      setLoadingPersonas(false)
     }
-    
-    const newProfiles = [...profiles, newProfile]
-    setProfiles(newProfiles)
-    saveProfiles(newProfiles, activeProfile?.id || null)
-    return newProfile
-  }, [profiles, activeProfile, saveProfiles])
+  }, [])
 
-  const selectProfile = useCallback((profile: PersonProfile | null) => {
-    setActiveProfile(profile)
-    saveProfiles(profiles, profile?.id || null)
-  }, [profiles, saveProfiles])
-
-  const deleteProfile = useCallback((profileId: string) => {
-    const newProfiles = profiles.filter(p => p.id !== profileId)
-    setProfiles(newProfiles)
-    
-    if (activeProfile?.id === profileId) {
-      setActiveProfile(null)
-      saveProfiles(newProfiles, null)
+  // ペルソナ選択機能
+  const selectPersona = useCallback((persona: any | null) => {
+    setActivePersona(persona)
+    if (persona) {
+      localStorage.setItem('selected-persona-id', persona.id)
     } else {
-      saveProfiles(newProfiles, activeProfile?.id || null)
+      localStorage.removeItem('selected-persona-id')
     }
-  }, [profiles, activeProfile, saveProfiles])
+  }, [])
 
   // 初期化
   useEffect(() => {
@@ -571,13 +649,8 @@ export default function Home() {
     const savedMessages = loadConversation()
     setMessages(savedMessages)
 
-    // 人物プロファイルの読み込み
-    const savedProfiles = loadProfiles()
-    if (savedProfiles) {
-      setProfiles(savedProfiles.profiles)
-      const activeProf = savedProfiles.profiles.find(p => p.id === savedProfiles.activeProfileId)
-      setActiveProfile(activeProf || null)
-    }
+    // 事前定義されたペルソナの読み込み
+    loadPredefinedPersonas()
 
     // 音声認識のサポート確認
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
@@ -626,7 +699,7 @@ export default function Home() {
       window.removeEventListener('online', handleOnline)
       window.removeEventListener('offline', handleOffline)
     }
-  }, [loadConversation, loadProfiles])
+  }, [loadConversation, loadPredefinedPersonas])
 
   // メッセージ追加時の自動スクロール
   useEffect(() => {
@@ -649,9 +722,9 @@ export default function Home() {
             <h1 className="text-3xl md:text-4xl font-bold text-gray-800">
               💬 AIチャットボット
             </h1>
-            {activeProfile && (
+            {activePersona && (
               <p className="text-lg text-gray-600 mt-1">
-                🎭 {activeProfile.name} として回答
+                🎭 {activePersona.name} として回答
               </p>
             )}
           </div>
@@ -673,29 +746,31 @@ export default function Home() {
               </button>
             )}
             
-            {/* プロファイル選択ドロップダウン */}
+            {/* ペルソナ選択ドロップダウン */}
             <select
-              value={activeProfile?.id || ''}
+              value={activePersona?.id || ''}
               onChange={(e) => {
-                const selectedProfile = profiles.find(p => p.id === e.target.value) || null
-                selectProfile(selectedProfile)
+                const selectedPersona = predefinedPersonas.find(p => p.id === e.target.value) || null
+                selectPersona(selectedPersona)
               }}
               className="px-3 py-2 rounded-xl border border-gray-300 bg-white text-gray-700 text-sm font-medium"
+              disabled={loadingPersonas}
             >
               <option value="">一般AI</option>
-              {profiles.map(profile => (
-                <option key={profile.id} value={profile.id}>
-                  {profile.name}
+              {predefinedPersonas.map(persona => (
+                <option key={persona.id} value={persona.id}>
+                  {persona.name} ({persona.category})
                 </option>
               ))}
             </select>
             
+            {/* 管理者機能ボタン（開発用） */}
             <button
-              onClick={() => setShowProfileModal(true)}
+              onClick={() => setShowAdminModal(true)}
               className="btn-simple px-4 py-2 text-sm font-medium"
-              aria-label="新しい人物を追加"
+              aria-label="ペルソナ管理"
             >
-              👤 人物追加
+              ⚙️ 管理
             </button>
             
             {messages.length > 0 && (
@@ -913,11 +988,11 @@ export default function Home() {
         </div>
       </main>
 
-      {/* 人物プロファイル作成モーダル */}
-      <ProfileCreationModal
-        isOpen={showProfileModal}
-        onClose={() => setShowProfileModal(false)}
-        onCreate={createProfile}
+      {/* ペルソナ管理モーダル */}
+      <PersonaAdminModal
+        isOpen={showAdminModal}
+        onClose={() => setShowAdminModal(false)}
+        personas={predefinedPersonas}
       />
     </div>
   )
