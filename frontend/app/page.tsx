@@ -56,6 +56,7 @@ export default function Home() {
   const [isOnline, setIsOnline] = useState(true)
   const [error, setError] = useState<ErrorState | null>(null)
   const [retryCount, setRetryCount] = useState(0)
+  const [isComposing, setIsComposing] = useState(false)
   
   // Refs
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -305,12 +306,15 @@ export default function Home() {
   }, [messages])
 
   // キーボードショートカット
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      sendMessage()
+      // 日本語入力の変換中でない場合のみ送信
+      if (!isComposing) {
+        e.preventDefault()
+        sendMessage()
+      }
     }
-  }, [sendMessage])
+  }, [sendMessage, isComposing])
 
   // 文字数計算
   const characterCount = useMemo(() => message.length, [message])
@@ -571,6 +575,8 @@ export default function Home() {
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 onKeyDown={handleKeyDown}
+                onCompositionStart={() => setIsComposing(true)}
+                onCompositionEnd={() => setIsComposing(false)}
                 placeholder="質問を入力してください... (Shift+Enterで改行)"
                 className="input-simple w-full p-4 text-gray-800 placeholder-gray-500 resize-none font-medium"
                 rows={1}
