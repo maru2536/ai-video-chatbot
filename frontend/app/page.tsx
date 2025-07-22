@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import Image from 'next/image'
 import './simple-ui.css'
+import { PersonProfile, PersonProfileStorage } from './types/chat'
 
 // 型定義
 interface Message {
@@ -40,6 +41,163 @@ const SimpleAudioVisualizer = ({ isActive }: { isActive: boolean }) => {
   )
 }
 
+// 人物プロファイル作成モーダルコンポーネント
+const ProfileCreationModal = ({ 
+  isOpen, 
+  onClose, 
+  onCreate 
+}: { 
+  isOpen: boolean
+  onClose: () => void
+  onCreate: (profile: Omit<PersonProfile, 'id' | 'createdAt' | 'updatedAt'>) => void
+}) => {
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    personality: '',
+    speakingStyle: '',
+    background: '',
+    expertise: '',
+    catchPhrase: ''
+  })
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!formData.name.trim()) return
+
+    onCreate({
+      ...formData,
+      expertise: formData.expertise.split(',').map(s => s.trim()).filter(Boolean)
+    })
+    
+    // フォームリセット
+    setFormData({
+      name: '',
+      description: '',
+      personality: '',
+      speakingStyle: '',
+      background: '',
+      expertise: '',
+      catchPhrase: ''
+    })
+    onClose()
+  }
+
+  if (!isOpen) return null
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="glass-simple max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+        <div className="p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-800">新しい人物プロファイル作成</h2>
+            <button
+              onClick={onClose}
+              className="text-gray-500 hover:text-gray-700 text-2xl font-bold"
+              aria-label="閉じる"
+            >
+              ×
+            </button>
+          </div>
+          
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">名前 *</label>
+              <input
+                type="text"
+                value={formData.name}
+                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                className="input-simple w-full p-3"
+                required
+                placeholder="例: 夏目漱石"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">説明</label>
+              <input
+                type="text"
+                value={formData.description}
+                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                className="input-simple w-full p-3"
+                placeholder="例: 明治時代の小説家、評論家"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">性格</label>
+              <textarea
+                value={formData.personality}
+                onChange={(e) => setFormData(prev => ({ ...prev, personality: e.target.value }))}
+                className="input-simple w-full p-3 h-20 resize-none"
+                placeholder="例: 知的で皮肉屋、時に神経質だが情に厚い面もある"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">話し方</label>
+              <textarea
+                value={formData.speakingStyle}
+                onChange={(e) => setFormData(prev => ({ ...prev, speakingStyle: e.target.value }))}
+                className="input-simple w-full p-3 h-20 resize-none"
+                placeholder="例: 丁寧語を使うが時々関西弁が混じる、比喩を多用する"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">背景・経歴</label>
+              <textarea
+                value={formData.background}
+                onChange={(e) => setFormData(prev => ({ ...prev, background: e.target.value }))}
+                className="input-simple w-full p-3 h-20 resize-none"
+                placeholder="例: 東京帝国大学英文科卒業、教師を経て作家に"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">専門分野（カンマ区切り）</label>
+              <input
+                type="text"
+                value={formData.expertise}
+                onChange={(e) => setFormData(prev => ({ ...prev, expertise: e.target.value }))}
+                className="input-simple w-full p-3"
+                placeholder="例: 文学, 英語教育, 心理描写, 社会批評"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">口癖・決まり文句（任意）</label>
+              <input
+                type="text"
+                value={formData.catchPhrase}
+                onChange={(e) => setFormData(prev => ({ ...prev, catchPhrase: e.target.value }))}
+                className="input-simple w-full p-3"
+                placeholder="例: 智に働けば角が立つ"
+              />
+            </div>
+            
+            <div className="flex gap-4 pt-4">
+              <button
+                type="submit"
+                className="btn-simple px-6 py-3 font-medium flex-1"
+              >
+                作成する
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-6 py-3 font-medium border border-gray-300 rounded-xl bg-white text-gray-700 hover:bg-gray-50 flex-1"
+              >
+                キャンセル
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function Home() {
   // 基本的なステート
   const [message, setMessage] = useState('')
@@ -58,6 +216,11 @@ export default function Home() {
   const [retryCount, setRetryCount] = useState(0)
   const [isComposing, setIsComposing] = useState(false)
   
+  // 人物プロファイル関連のステート
+  const [profiles, setProfiles] = useState<PersonProfile[]>([])
+  const [activeProfile, setActiveProfile] = useState<PersonProfile | null>(null)
+  const [showProfileModal, setShowProfileModal] = useState(false)
+  
   // Refs
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const recognitionRef = useRef<any>(null)
@@ -66,6 +229,7 @@ export default function Home() {
 
   // LocalStorage関連の定数
   const STORAGE_KEY = 'ai-chat-history'
+  const PROFILE_STORAGE_KEY = 'ai-chat-profiles'
   const MAX_MESSAGES = 50
 
   // 会話履歴の保存
@@ -102,6 +266,42 @@ export default function Home() {
   const clearHistory = useCallback(() => {
     setMessages([])
     localStorage.removeItem(STORAGE_KEY)
+  }, [])
+
+  // 人物プロファイルの保存
+  const saveProfiles = useCallback((profiles: PersonProfile[], activeProfileId: string | null) => {
+    try {
+      const profileStorage: PersonProfileStorage = {
+        profiles,
+        activeProfileId,
+        lastUpdated: new Date()
+      }
+      localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profileStorage))
+    } catch (error) {
+      console.warn('Failed to save profiles:', error)
+    }
+  }, [])
+
+  // 人物プロファイルの読み込み
+  const loadProfiles = useCallback((): PersonProfileStorage | null => {
+    try {
+      const stored = localStorage.getItem(PROFILE_STORAGE_KEY)
+      if (stored) {
+        const profileStorage: PersonProfileStorage = JSON.parse(stored)
+        return {
+          ...profileStorage,
+          profiles: profileStorage.profiles.map(profile => ({
+            ...profile,
+            createdAt: new Date(profile.createdAt),
+            updatedAt: new Date(profile.updatedAt)
+          })),
+          lastUpdated: new Date(profileStorage.lastUpdated)
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to load profiles:', error)
+    }
+    return null
   }, [])
 
   // メッセージの自動スクロール
@@ -198,7 +398,10 @@ export default function Home() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ message: textToSend }),
+        body: JSON.stringify({ 
+          message: textToSend,
+          profile: activeProfile 
+        }),
       })
 
       if (!response.ok) {
@@ -264,7 +467,7 @@ export default function Home() {
     } finally {
       setLoading(false)
     }
-  }, [message, messages, saveConversation, speechSynthesisSupported, speakText])
+  }, [message, messages, saveConversation, speechSynthesisSupported, speakText, activeProfile])
 
   // リトライ機能
   const retryLastMessage = useCallback(() => {
@@ -319,6 +522,38 @@ export default function Home() {
   // 文字数計算
   const characterCount = useMemo(() => message.length, [message])
 
+  // 人物プロファイル管理機能
+  const createProfile = useCallback((profileData: Omit<PersonProfile, 'id' | 'createdAt' | 'updatedAt'>) => {
+    const newProfile: PersonProfile = {
+      ...profileData,
+      id: `profile-${Date.now()}`,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+    
+    const newProfiles = [...profiles, newProfile]
+    setProfiles(newProfiles)
+    saveProfiles(newProfiles, activeProfile?.id || null)
+    return newProfile
+  }, [profiles, activeProfile, saveProfiles])
+
+  const selectProfile = useCallback((profile: PersonProfile | null) => {
+    setActiveProfile(profile)
+    saveProfiles(profiles, profile?.id || null)
+  }, [profiles, saveProfiles])
+
+  const deleteProfile = useCallback((profileId: string) => {
+    const newProfiles = profiles.filter(p => p.id !== profileId)
+    setProfiles(newProfiles)
+    
+    if (activeProfile?.id === profileId) {
+      setActiveProfile(null)
+      saveProfiles(newProfiles, null)
+    } else {
+      saveProfiles(newProfiles, activeProfile?.id || null)
+    }
+  }, [profiles, activeProfile, saveProfiles])
+
   // 初期化
   useEffect(() => {
     // アバター画像の存在確認
@@ -335,6 +570,14 @@ export default function Home() {
     // 会話履歴の読み込み
     const savedMessages = loadConversation()
     setMessages(savedMessages)
+
+    // 人物プロファイルの読み込み
+    const savedProfiles = loadProfiles()
+    if (savedProfiles) {
+      setProfiles(savedProfiles.profiles)
+      const activeProf = savedProfiles.profiles.find(p => p.id === savedProfiles.activeProfileId)
+      setActiveProfile(activeProf || null)
+    }
 
     // 音声認識のサポート確認
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
@@ -383,7 +626,7 @@ export default function Home() {
       window.removeEventListener('online', handleOnline)
       window.removeEventListener('offline', handleOffline)
     }
-  }, [loadConversation])
+  }, [loadConversation, loadProfiles])
 
   // メッセージ追加時の自動スクロール
   useEffect(() => {
@@ -402,9 +645,16 @@ export default function Home() {
       <main className="container mx-auto max-w-4xl p-4 min-h-screen flex flex-col">
         {/* ヘッダー */}
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-800">
-            💬 AIチャットボット
-          </h1>
+          <div>
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-800">
+              💬 AIチャットボット
+            </h1>
+            {activeProfile && (
+              <p className="text-lg text-gray-600 mt-1">
+                🎭 {activeProfile.name} として回答
+              </p>
+            )}
+          </div>
           
           <div className="flex gap-3">
             {!isOnline && (
@@ -422,6 +672,31 @@ export default function Home() {
                 🔄 再試行
               </button>
             )}
+            
+            {/* プロファイル選択ドロップダウン */}
+            <select
+              value={activeProfile?.id || ''}
+              onChange={(e) => {
+                const selectedProfile = profiles.find(p => p.id === e.target.value) || null
+                selectProfile(selectedProfile)
+              }}
+              className="px-3 py-2 rounded-xl border border-gray-300 bg-white text-gray-700 text-sm font-medium"
+            >
+              <option value="">一般AI</option>
+              {profiles.map(profile => (
+                <option key={profile.id} value={profile.id}>
+                  {profile.name}
+                </option>
+              ))}
+            </select>
+            
+            <button
+              onClick={() => setShowProfileModal(true)}
+              className="btn-simple px-4 py-2 text-sm font-medium"
+              aria-label="新しい人物を追加"
+            >
+              👤 人物追加
+            </button>
             
             {messages.length > 0 && (
               <>
@@ -637,6 +912,13 @@ export default function Home() {
           </div>
         </div>
       </main>
+
+      {/* 人物プロファイル作成モーダル */}
+      <ProfileCreationModal
+        isOpen={showProfileModal}
+        onClose={() => setShowProfileModal(false)}
+        onCreate={createProfile}
+      />
     </div>
   )
 }

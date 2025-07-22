@@ -18,6 +18,26 @@ export interface ErrorState {
   retryable: boolean
 }
 
+// 人物プロファイル関連の型定義
+export interface PersonProfile {
+  id: string
+  name: string
+  description: string
+  personality: string
+  speakingStyle: string
+  background: string
+  expertise: string[]
+  catchPhrase?: string
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface PersonProfileStorage {
+  profiles: PersonProfile[]
+  activeProfileId: string | null
+  lastUpdated: Date
+}
+
 // 音声認識API の型定義
 export interface SpeechRecognitionResult {
   isFinal: boolean
