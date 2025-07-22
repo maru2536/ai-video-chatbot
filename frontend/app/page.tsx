@@ -430,6 +430,50 @@ export default function Home() {
 
   // 事前定義されたペルソナの読み込み
   const loadPredefinedPersonas = useCallback(async () => {
+    // フォールバック用のハードコーディングされたペルソナ
+    const fallbackPersonas: Persona[] = [
+      {
+        id: "natsume-soseki",
+        name: "夏目漱石",
+        category: "文学者",
+        description: "明治時代の小説家、英文学者。",
+        personality: "知的で皮肉屋、時に神経質だが情に厚い面もある。",
+        speakingStyle: "丁寧語を基調とするが、関西弁が時々混じる。比喻や文学的表現を多用。",
+        background: "東京帝国大学英文科卒業後、教師を経て作家に。",
+        expertise: ["文学", "英文学", "心理描写", "社会批評"],
+        catchPhrase: "智に働けば角が立つ。情に棹させば流される。意地を通せば窮屈だ。",
+        responseStyle: {
+          tone: "丁寧だが時に皮肉を込めた",
+          vocabulary: "文学的で格調高い表現を使用",
+          approach: "哲学的で内省的、人間の心理や社会問題を深く掘り下げる"
+        },
+        sampleResponses: [],
+        createdAt: "2024-01-01T00:00:00Z",
+        updatedAt: "2024-01-01T00:00:00Z",
+        active: true
+      },
+      {
+        id: "hamada-yusuke",
+        name: "濵田祐輔",
+        category: "事業開発者",
+        description: "バチャナビの事業開発責任者。",
+        personality: "本質的な課題解決を重視し、テクノロジーと人の温かさの両立を大切にする。",
+        speakingStyle: "「本質的なニーズに応える」「体験価値」などの専門用語を頻繁に使用。",
+        background: "採用コンサルティング会社での経験を経て、バチャナビに入社。",
+        expertise: ["事業開発", "採用支援", "バーチャル技術", "顧客体験"],
+        catchPhrase: "本質的なニーズに応える。体験価値を最大化する。",
+        responseStyle: {
+          tone: "情熱的で前向き、課題解決に対して分析的",
+          vocabulary: "ビジネス用語と体験価値に関する表現を多用",
+          approach: "課題の本質を見極め、テクノロジーソリューションで解決策を提示"
+        },
+        sampleResponses: [],
+        createdAt: "2025-07-22T00:00:00Z",
+        updatedAt: "2025-07-22T00:00:00Z",
+        active: true
+      }
+    ]
+
     try {
       setLoadingPersonas(true)
       console.log('Loading predefined personas...') // デバッグ用
@@ -439,23 +483,25 @@ export default function Home() {
       if (response.ok) {
         const data = await response.json()
         console.log('Personas data received:', data) // デバッグ用
-        setPredefinedPersonas(data.personas || [])
+        const personas = data.personas || fallbackPersonas
+        setPredefinedPersonas(personas)
+        console.log(`Set ${personas.length} personas in state`) // デバッグ用
         
         // LocalStorageから選択中のペルソナIDを復元
         const savedPersonaId = localStorage.getItem('selected-persona-id')
         if (savedPersonaId) {
-          const savedPersona = data.personas.find((p: Persona) => p.id === savedPersonaId)
+          const savedPersona = personas.find((p: Persona) => p.id === savedPersonaId)
           if (savedPersona) {
             setActivePersona(savedPersona)
           }
         }
       } else {
-        console.error('Failed to fetch personas, status:', response.status)
-        const errorText = await response.text()
-        console.error('Error response:', errorText)
+        console.error('Failed to fetch personas, using fallback data. Status:', response.status)
+        setPredefinedPersonas(fallbackPersonas)
       }
     } catch (error) {
-      console.error('Failed to load predefined personas:', error)
+      console.error('Failed to load predefined personas, using fallback data:', error)
+      setPredefinedPersonas(fallbackPersonas)
     } finally {
       setLoadingPersonas(false)
     }
@@ -605,14 +651,23 @@ export default function Home() {
               ))}
             </select>
             
+            {/* 強制読み込みボタン（デバッグ用） */}
+            <button
+              onClick={() => {
+                console.log('Force reloading personas...')
+                loadPredefinedPersonas()
+              }}
+              className="btn-simple px-3 py-1 text-xs"
+            >
+              🔄 強制再読込
+            </button>
+
             {/* デバッグ情報（開発用） */}
-            {process.env.NODE_ENV === 'development' && (
-              <div className="text-xs text-gray-500">
-                読み込み中: {loadingPersonas ? 'Yes' : 'No'} | 
-                ペルソナ数: {predefinedPersonas.length} | 
-                選択中: {activePersona?.name || 'なし'}
-              </div>
-            )}
+            <div className="text-xs text-gray-500">
+              読み込み中: {loadingPersonas ? 'Yes' : 'No'} | 
+              ペルソナ数: {predefinedPersonas.length} | 
+              選択中: {activePersona?.name || 'なし'}
+            </div>
             
             {/* 管理者機能ボタン（開発用） */}
             <button
