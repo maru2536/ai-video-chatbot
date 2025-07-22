@@ -432,9 +432,13 @@ export default function Home() {
   const loadPredefinedPersonas = useCallback(async () => {
     try {
       setLoadingPersonas(true)
+      console.log('Loading predefined personas...') // デバッグ用
       const response = await fetch('/api/personas?active=true')
+      console.log('Personas API response status:', response.status) // デバッグ用
+      
       if (response.ok) {
         const data = await response.json()
+        console.log('Personas data received:', data) // デバッグ用
         setPredefinedPersonas(data.personas || [])
         
         // LocalStorageから選択中のペルソナIDを復元
@@ -445,6 +449,10 @@ export default function Home() {
             setActivePersona(savedPersona)
           }
         }
+      } else {
+        console.error('Failed to fetch personas, status:', response.status)
+        const errorText = await response.text()
+        console.error('Error response:', errorText)
       }
     } catch (error) {
       console.error('Failed to load predefined personas:', error)
@@ -581,7 +589,9 @@ export default function Home() {
             <select
               value={activePersona?.id || ''}
               onChange={(e) => {
+                console.log('Persona selected:', e.target.value) // デバッグ用
                 const selectedPersona = predefinedPersonas.find(p => p.id === e.target.value) || null
+                console.log('Found persona:', selectedPersona) // デバッグ用
                 selectPersona(selectedPersona)
               }}
               className="px-3 py-2 rounded-xl border border-gray-300 bg-white text-gray-700 text-sm font-medium"
@@ -594,6 +604,15 @@ export default function Home() {
                 </option>
               ))}
             </select>
+            
+            {/* デバッグ情報（開発用） */}
+            {process.env.NODE_ENV === 'development' && (
+              <div className="text-xs text-gray-500">
+                読み込み中: {loadingPersonas ? 'Yes' : 'No'} | 
+                ペルソナ数: {predefinedPersonas.length} | 
+                選択中: {activePersona?.name || 'なし'}
+              </div>
+            )}
             
             {/* 管理者機能ボタン（開発用） */}
             <button

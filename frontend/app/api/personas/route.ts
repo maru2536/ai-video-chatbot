@@ -41,8 +41,11 @@ export interface PersonasData {
 function getPersonasData(): PersonasData {
   try {
     const filePath = join(process.cwd(), 'data', 'personas', 'personas.json')
+    console.log('Trying to read personas from:', filePath) // デバッグ用
     const fileContents = readFileSync(filePath, 'utf8')
-    return JSON.parse(fileContents)
+    const data = JSON.parse(fileContents)
+    console.log(`Loaded ${data.personas?.length || 0} personas`) // デバッグ用
+    return data
   } catch (error) {
     console.error('Failed to load personas data:', error)
     // フォールバック: 空のデータを返す
