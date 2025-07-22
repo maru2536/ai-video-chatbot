@@ -307,12 +307,12 @@ export default function Home() {
 
   // キーボードショートカット
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      // 日本語入力の変換中でない場合のみ送信
-      if (!isComposing) {
-        e.preventDefault()
-        sendMessage()
-      }
+    // 日本語入力の変換中かチェック（e.nativeEvent.isComposingも確認）
+    const isCurrentlyComposing = e.nativeEvent.isComposing || isComposing
+    
+    if (e.key === 'Enter' && !e.shiftKey && !isCurrentlyComposing) {
+      e.preventDefault()
+      sendMessage()
     }
   }, [sendMessage, isComposing])
 
@@ -576,7 +576,10 @@ export default function Home() {
                 onChange={(e) => setMessage(e.target.value)}
                 onKeyDown={handleKeyDown}
                 onCompositionStart={() => setIsComposing(true)}
-                onCompositionEnd={() => setIsComposing(false)}
+                onCompositionEnd={() => {
+                  // 変換確定後、少し遅延を入れてから状態を更新
+                  setTimeout(() => setIsComposing(false), 0)
+                }}
                 placeholder="質問を入力してください... (Shift+Enterで改行)"
                 className="input-simple w-full p-4 text-gray-800 placeholder-gray-500 resize-none font-medium"
                 rows={1}
