@@ -9,9 +9,15 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@langchain/community": "^0.3.53",
+    "@langchain/core": "^0.3.72",
+    "@langchain/openai": "^0.6.9",
     "autoprefixer": "^10.4.21",
+    "formidable": "^3.5.4",
+    "langchain": "^0.3.31",
     "next": "15.3.5",
     "openai": "^5.9.0",
+    "pdf-parse": "^1.1.1",
     "postcss": "^8.5.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -19,6 +25,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@types/formidable": "^3.4.5",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
