@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { promises as fs } from 'fs'
 import { getVectorStore } from '@/app/lib/vectorStore'
 
 export async function POST(req: NextRequest) {

@@ -1,18 +1,46 @@
-import { OpenAIEmbeddings } from "@langchain/openai"
-
 interface Document {
   pageContent: string
   metadata: any
 }
 
+class SimpleEmbeddings {
+  private apiKey: string
+
+  constructor(apiKey: string) {
+    this.apiKey = apiKey
+  }
+
+  async embedQuery(text: string): Promise<number[]> {
+    const response = await fetch('https://api.openai.com/v1/embeddings', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${this.apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'text-embedding-3-small',
+        input: text,
+      }),
+    })
+
+    if (!response.ok) {
+      throw new Error(`Failed to generate embedding: ${response.statusText}`)
+    }
+
+    const data = await response.json()
+    return data.data[0].embedding
+  }
+}
+
 export class VectorStore {
-  private embeddings: OpenAIEmbeddings
+  private embeddings: SimpleEmbeddings
   private documents: Map<string, { embedding: number[], content: string, metadata: any }>
 
   constructor() {
-    this.embeddings = new OpenAIEmbeddings({
-      apiKey: process.env.OPENAI_API_KEY,
-    })
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error('OPENAI_API_KEY is not set')
+    }
+    this.embeddings = new SimpleEmbeddings(process.env.OPENAI_API_KEY)
     this.documents = new Map()
   }
 
